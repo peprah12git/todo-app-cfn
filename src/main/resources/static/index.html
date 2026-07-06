@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Todo</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f0f2f5;
+      color: #1a202c;
+      padding: 1.25rem 1rem;
+      min-height: 100vh;
+    }
+
+    #app { max-width: 620px; margin: 0 auto; }
+
+    h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: #2d3748;
+      margin-bottom: 1.25rem;
+      letter-spacing: -.3px;
+    }
+
+    /* ── Add form ─────────────────────────────────────────────── */
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 1.1rem 1.2rem;
+      box-shadow: 0 1px 4px rgba(0,0,0,.08);
+      margin-bottom: 1rem;
+    }
+
+    .card h2 { font-size: .9rem; font-weight: 600; color: #4a5568; margin-bottom: .7rem; text-transform: uppercase; letter-spacing: .05em; }
+
+    input[type="text"], textarea {
+      width: 100%;
+      padding: .55rem .75rem;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: .93rem;
+      font-family: inherit;
+      color: #2d3748;
+      background: #f7fafc;
+      transition: border-color .15s;
+      margin-bottom: .5rem;
+    }
+    input[type="text"]:focus, textarea:focus {
+      outline: none;
+      border-color: #4f46e5;
+      background: #fff;
+    }
+    textarea { resize: vertical; min-height: 58px; }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: .55rem .9rem;
+      border: none;
+      border-radius: 8px;
+      font-size: .88rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background .15s, opacity .15s;
+    }
+    .btn-primary { background: #4f46e5; color: #fff; width: 100%; }
+    .btn-primary:hover { background: #4338ca; }
+
+    /* ── Task list ────────────────────────────────────────────── */
+    #task-list { list-style: none; }
+
+    .task-item {
+      background: #fff;
+      border-radius: 10px;
+      padding: .8rem 1rem;
+      margin-bottom: .45rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,.06);
+      display: flex;
+      align-items: flex-start;
+      gap: .7rem;
+      transition: opacity .15s;
+    }
+    .task-item.done .task-title { text-decoration: line-through; color: #a0aec0; }
+
+    .task-check {
+      width: 17px;
+      height: 17px;
+      margin-top: 3px;
+      cursor: pointer;
+      flex-shrink: 0;
+      accent-color: #4f46e5;
+    }
+
+    .task-body { flex: 1; min-width: 0; }
+    .task-title { display: block; font-weight: 500; word-break: break-word; line-height: 1.4; }
+    .task-desc  { display: block; font-size: .83rem; color: #718096; margin-top: .18rem; word-break: break-word; line-height: 1.4; }
+
+    .task-actions { display: flex; gap: .35rem; flex-shrink: 0; }
+    .btn-sm {
+      padding: .28rem .6rem;
+      border: none;
+      border-radius: 6px;
+      font-size: .78rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .btn-edit { background: #eef2ff; color: #4f46e5; }
+    .btn-edit:hover { background: #e0e7ff; }
+    .btn-del  { background: #fff5f5; color: #e53e3e; }
+    .btn-del:hover { background: #fed7d7; }
+
+    /* ── Inline edit ──────────────────────────────────────────── */
+    .edit-wrap { width: 100%; }
+    .edit-wrap input[type="text"],
+    .edit-wrap textarea { margin-bottom: .4rem; background: #fff; }
+    .edit-btns { display: flex; gap: .4rem; justify-content: flex-end; }
+    .btn-save   { background: #4f46e5; color: #fff; }
+    .btn-save:hover { background: #4338ca; }
+    .btn-cancel { background: #edf2f7; color: #4a5568; }
+    .btn-cancel:hover { background: #e2e8f0; }
+
+    /* ── Empty state ──────────────────────────────────────────── */
+    .empty {
+      text-align: center;
+      padding: 2.5rem 1rem;
+      color: #a0aec0;
+      font-size: .93rem;
+    }
+  </style>
+</head>
+<body>
+<div id="app">
+  <h1>Todo</h1>
+
+  <div class="card">
+    <h2>New task</h2>
+    <form id="add-form">
+      <input type="text" id="new-title" placeholder="Title *" maxlength="255" required />
+      <textarea id="new-desc" placeholder="Description (optional)" rows="2"></textarea>
+      <button type="submit" class="btn btn-primary">Add task</button>
+    </form>
+  </div>
+
+  <ul id="task-list"></ul>
+</div>
+
+<script>
+  const API = '/api/tasks';
+  let tasks = [];
+
+  /* ── API helpers ─────────────────────────────────────────── */
+
+  async function loadTasks() {
+    const res = await fetch(API);
+    tasks = await res.json();
+    render();
+  }
+
+  async function apiPost(body) {
+    const res = await fetch(API, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    if (!res.ok) { const e = await res.json(); alert(e.message); }
+    await loadTasks();
+  }
+
+  async function apiPut(id, body) {
+    await fetch(`${API}/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    await loadTasks();
+  }
+
+  async function apiDelete(id) {
+    await fetch(`${API}/${id}`, { method: 'DELETE' });
+    await loadTasks();
+  }
+
+  /* ── Render ──────────────────────────────────────────────── */
+
+  function render() {
+    const list = document.getElementById('task-list');
+    list.innerHTML = '';
+    if (!tasks.length) {
+      list.innerHTML = '<li class="empty">No tasks yet — add one above.</li>';
+      return;
+    }
+    tasks.forEach(t => list.appendChild(buildItem(t)));
+  }
+
+  function esc(s) {
+    return String(s)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function buildItem(t) {
+    const li = document.createElement('li');
+    li.className = 'task-item' + (t.completed ? ' done' : '');
+    li.dataset.id = t.id;
+    li.innerHTML = `
+      <input class="task-check" type="checkbox" ${t.completed ? 'checked' : ''}
+             onchange="toggle(${t.id}, this.checked)" />
+      <div class="task-body">
+        <span class="task-title">${esc(t.title)}</span>
+        ${t.description ? `<span class="task-desc">${esc(t.description)}</span>` : ''}
+      </div>
+      <div class="task-actions">
+        <button class="btn-sm btn-edit" onclick="startEdit(${t.id})">Edit</button>
+        <button class="btn-sm btn-del"  onclick="del(${t.id})">Delete</button>
+      </div>`;
+    return li;
+  }
+
+  /* ── Actions ─────────────────────────────────────────────── */
+
+  document.getElementById('add-form').addEventListener('submit', async e => {
+    e.preventDefault();
+    const title = document.getElementById('new-title').value.trim();
+    const desc  = document.getElementById('new-desc').value.trim();
+    await apiPost({ title, description: desc || null });
+    e.target.reset();
+  });
+
+  async function toggle(id, completed) {
+    const t = tasks.find(x => x.id === id);
+    await apiPut(id, { ...t, completed });
+  }
+
+  async function del(id) {
+    if (confirm('Delete this task?')) await apiDelete(id);
+  }
+
+  function startEdit(id) {
+    const t  = tasks.find(x => x.id === id);
+    const li = document.querySelector(`.task-item[data-id="${id}"]`);
+    li.innerHTML = `
+      <div class="edit-wrap">
+        <input type="text" id="et-${id}" value="${esc(t.title)}" maxlength="255" required />
+        <textarea id="ed-${id}" rows="2">${esc(t.description || '')}</textarea>
+        <div class="edit-btns">
+          <button class="btn-sm btn-cancel" onclick="loadTasks()">Cancel</button>
+          <button class="btn-sm btn-save"   onclick="saveEdit(${id})">Save</button>
+        </div>
+      </div>`;
+    document.getElementById(`et-${id}`).focus();
+  }
+
+  async function saveEdit(id) {
+    const t     = tasks.find(x => x.id === id);
+    const title = document.getElementById(`et-${id}`).value.trim();
+    const desc  = document.getElementById(`ed-${id}`).value.trim();
+    if (!title) return;
+    await apiPut(id, { ...t, title, description: desc || null });
+  }
+
+  loadTasks();
+</script>
+</body>
+</html>

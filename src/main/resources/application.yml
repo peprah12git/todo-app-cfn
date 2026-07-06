@@ -1,0 +1,33 @@
+spring:
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5434/todo}
+    username: ${SPRING_DATASOURCE_USERNAME:todo}
+    password: ${SPRING_DATASOURCE_PASSWORD:todo}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+  flyway:
+    enabled: true
+  data:
+    redis:
+      host: ${SPRING_DATA_REDIS_HOST:localhost}
+      port: ${SPRING_DATA_REDIS_PORT:6381}
+      ssl:
+        enabled: ${SPRING_DATA_REDIS_SSL:false}
+      connect-timeout: 2s
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      probes:
+        enabled: true
+  health:
+    redis:
+      enabled: false
+
+server:
+  port: ${SERVER_PORT:8082}
