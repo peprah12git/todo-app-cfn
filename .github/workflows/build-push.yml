@@ -14,6 +14,7 @@ permissions:
 env:
   AWS_REGION: eu-central-1
   ECR_REPOSITORY: todo-app
+  ARTIFACT_BUCKET: todo-pipeline-artifacts-825765391206
 
 jobs:
   build-and-push:
@@ -25,7 +26,7 @@ jobs:
       - name: Configure AWS credentials via OIDC
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/todo-github-actions-role
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Login to Amazon ECR
@@ -49,3 +50,9 @@ jobs:
           echo "### Image pushed :package:" >> "$GITHUB_STEP_SUMMARY"
           echo "**Digest:** \`$DIGEST\`" >> "$GITHUB_STEP_SUMMARY"
           echo "**Commit:** \`${{ github.sha }}\`" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload deployment artifacts to S3
+        run: |
+          cd deploy
+          zip source.zip taskdef.json appspec.yaml
+          aws s3 cp source.zip s3://${{ env.ARTIFACT_BUCKET }}/templates/source.zip
