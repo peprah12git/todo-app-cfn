@@ -4,8 +4,8 @@
   "networkMode": "awsvpc",
   "cpu": "256",
   "memory": "512",
-  "executionRoleArn": "arn:aws:iam::ACCOUNT_ID:role/todo-task-execution-role",
-  "taskRoleArn": "arn:aws:iam::ACCOUNT_ID:role/todo-task-role",
+  "executionRoleArn": "arn:aws:iam::825765391206:role/todo-task-execution-role",
+  "taskRoleArn": "arn:aws:iam::825765391206:role/todo-task-role",
   "containerDefinitions": [
     {
       "name": "app",
@@ -16,15 +16,15 @@
       ],
       "environment": [
         { "name": "SERVER_PORT", "value": "8080" },
-        { "name": "SPRING_DATASOURCE_URL", "value": "PROXY_JDBC_URL" },
+        { "name": "SPRING_DATASOURCE_URL", "value": "jdbc:postgresql://todo-db-proxy.proxy-ctogw4uqw6z5.eu-central-1.rds.amazonaws.com:5432/todo?sslmode=require" },
         { "name": "SPRING_DATASOURCE_USERNAME", "value": "todoadmin" },
-        { "name": "SPRING_DATA_REDIS_HOST", "value": "REDIS_HOST" },
+        { "name": "SPRING_DATA_REDIS_HOST", "value": "todo-redis.0jbnwf.0001.euc1.cache.amazonaws.com" },
         { "name": "SPRING_DATA_REDIS_PORT", "value": "6379" }
       ],
       "secrets": [
         {
           "name": "SPRING_DATASOURCE_PASSWORD",
-          "valueFrom": "DB_SECRET_ARN:password::"
+          "valueFrom": "arn:aws:secretsmanager:eu-central-1:825765391206:secret:todo/db-credentials-IgpHM3:password::"
         }
       ],
       "logConfiguration": {
