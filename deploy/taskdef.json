@@ -22,7 +22,7 @@
         { "name": "SERVER_PORT", "value": "8080" },
         { "name": "SPRING_DATASOURCE_URL", "value": "jdbc:postgresql://todo-db-proxy.proxy-ctogw4uqw6z5.eu-central-1.rds.amazonaws.com:5432/todo?sslmode=require" },
         { "name": "SPRING_DATASOURCE_USERNAME", "value": "todoadmin" },
-        { "name": "SPRING_DATA_REDIS_HOST", "value": "todo-redis.0jbnwf.0001.euc1.cache.amazonaws.com" },
+        { "name": "SPRING_DATA_REDIS_HOST", "value": "todo-redis.0jbnwf.ng.0001.euc1.cache.amazonaws.com" },
         { "name": "SPRING_DATA_REDIS_PORT", "value": "6379" }
       ],
       "secrets": [
