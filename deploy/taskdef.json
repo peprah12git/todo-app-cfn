@@ -28,7 +28,7 @@
       "secrets": [
         {
           "name": "SPRING_DATASOURCE_PASSWORD",
-          "valueFrom": "arn:aws:secretsmanager:eu-central-1:825765391206:secret:todo/db-credentials-IgpHM3:password::"
+          "valueFrom": "arn:aws:secretsmanager:eu-central-1:825765391206:secret:todo/db-credentials-eIREpP:password::"
         }
       ],
       "logConfiguration": {
